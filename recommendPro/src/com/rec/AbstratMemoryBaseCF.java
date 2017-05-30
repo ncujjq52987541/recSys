@@ -48,25 +48,28 @@ public abstract class AbstratMemoryBaseCF {
 	/**
 	 * 用户评分填充矩阵，即空值按一定策略填充
 	 */
-	protected Matrix userItemRatingWithFill;
-	
-	public Matrix fillUserItemRating(Matrix userItemRating){
-		userItemRatingWithFill = userItemRating.copy();
-		for (int i = 0; i < userItemRatingWithFill.getRowDimension(); i++) {
-			for (int j = 0; j < userItemRatingWithFill.getColumnDimension(); j++) {
-				if(userItemRatingWithFill.get(i, j)==0){
-					//double[] itemRatings = userItemRating.getMatrix(0, userItemRating.getRowDimension()-1, j, j).transpose().getArray()[0];
-					
-//					userItemRatingWithFill.set(i, j, MathUtil.getAverageIngoreZero(itemRatings));
-					
-					double[] userRatings=userItemRating.getMatrix(i, i, 0, userItemRating.getColumnDimension()-1).getArray()[0];
-					userItemRatingWithFill.set(i, j, MathUtil.getAverageIngoreZero(userRatings));
-				}
-				
-			}
-		}
-		return userItemRatingWithFill;
-	}
+//	protected Matrix userItemRatingWithFill;
+//	
+//	public Matrix fillUserItemRating(Matrix userItemRating){
+//		userItemRatingWithFill = userItemRating.copy();
+//		for (int i = 0; i < userItemRatingWithFill.getRowDimension(); i++) {
+//			for (int j = 0; j < userItemRatingWithFill.getColumnDimension(); j++) {
+//				if(userItemRatingWithFill.get(i, j)==0){
+//					double[] itemRatings = userItemRating.getMatrix(0, userItemRating.getRowDimension()-1, j, j).transpose().getArray()[0];
+//					double itemAvg = MathUtil.getAverageIngoreZero(itemRatings);//所有用户对一物品评分平均分
+////					userItemRatingWithFill.set(i, j, MathUtil.getAverageIngoreZero(itemRatings));
+//					
+//					double[] userRatings=userItemRating.getMatrix(i, i, 0, userItemRating.getColumnDimension()-1).getArray()[0];
+//					double userAvg = MathUtil.getAverageIngoreZero(userRatings);//某一用户对物品评分的平均分
+////					userItemRatingWithFill.set(i, j, MathUtil.getAverageIngoreZero(userRatings));
+//					double w = 0.5;
+//					userItemRatingWithFill.set(i, j, itemAvg*w+userAvg*(1-w));
+//				}
+//				
+//			}
+//		}
+//		return userItemRatingWithFill;
+//	}
 	
 	/**
 	 * pearson相关系数计算

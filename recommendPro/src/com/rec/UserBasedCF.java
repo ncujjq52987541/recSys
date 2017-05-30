@@ -2,8 +2,10 @@ package com.rec;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import Jama.Matrix;
 
@@ -12,6 +14,7 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 	 * 用户相似度矩阵
 	 */
 	private Matrix userSimilar;
+	private double[] userAvgRating;//缓存每个用户的平均评分
 	public UserBasedCF(String path,String splitSymbol){
 		loadData(path, splitSymbol);
 		initUserOrItemSimMatrix();
@@ -31,6 +34,7 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 
 	@Override
 	public void simMatrixCompute(String similiar){
+		userAvgRating = this.itemRatingAvgCache();
 		double[][] sim = userSimilar.getArray();
 //		double[] userAvgRating = null;
 //		if(SimiliarType.ADJUSTEDCOSINE.equals(similiar)){//只有ADJUSTEDCOSINE才需计算这个值
@@ -65,7 +69,14 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 			}
 		}
 	}
-	public List<Result> recommend(int userId,int k){
+	/**
+	 * 最原始的推荐,不是严格按公式的
+	 * @param userId
+	 * @param k
+	 * @return
+	 */
+	@Deprecated
+	public List<Result> recommendOrigin(int userId,int k){
 		int uindex = userIndex.get(userId);
 		Matrix userSimMatrix = userSimilar.getMatrix(uindex, uindex,0,userSimilar.getColumnDimension()-1);
 		double[][] result = userSimMatrix.times(useItemRating).getArray();
@@ -88,6 +99,133 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 			return finalResult;
 		}
 	}
+	//////////////
+	/**
+	 * 
+	 * @param userIndex 用户索引号
+	 * @return 返回的是相似用户的索引号集合！
+	 */
+	private Set<Integer> getUserNeighbors(int userIndex,int nums){
+		double[] users = userSimilar.getMatrix(userIndex, userIndex,0,userSimilar.getColumnDimension()-1).getArray()[0];
+		List<Result> r = new ArrayList<Result>();//临时用这个做排序用
+		for (int i = 0; i < users.length; i++) {
+			Result result = new Result();
+			result.setItemId(i);//现在这个实际是userId的索引号
+			result.setSimDegree(users[i]);
+			r.add(result);
+		}
+		Collections.sort(r);
+		
+		int sum=0;
+		Set<Integer> ret = new HashSet<Integer>();
+		for (Iterator iterator = r.iterator(); iterator.hasNext();) {
+			Result result = (Result) iterator.next();
+			if(userIndex!=result.getItemId()){//把自己除去
+				ret.add(result.getItemId());
+				++sum;
+			}
+			
+			if(sum>=nums) break;
+		}
+		return ret;
+	}
+	/**
+	 * 预测用户对物品的评分，注意传入的都是索引值
+	 * @param userIndex
+	 * @param itemIndex
+	 * @return
+	 */
+	public double ratingPredict(int userIndex,int itemIndex){
+		Set<Integer> users = getUserNeighbors(userIndex,this.neighborNumber);
+		double numerator =0; 
+		double denominator = 0;
+		for (Iterator iterator = users.iterator(); iterator.hasNext();) {
+			Integer ui = (Integer) iterator.next();
+			
+			numerator+=userSimilar.get(userIndex, ui)*(useItemRating.get(ui, itemIndex)-userAvgRating(ui));
+			denominator+=userSimilar.get(userIndex, ui);
+		}
+		if(denominator==0){
+			return userAvgRating(userIndex);
+		}
+		return userAvgRating(userIndex)+numerator/denominator;
+	}
+	public double ratingPredictWithId(int userId,int itemId){
+		if(this.userIndex.get(userId)==null){
+			System.out.println("用户："+userId+"不存在");
+			return 0;
+		}
+		if(this.itemIndex.get(itemId)==null){
+			System.out.println("物品："+itemId+"不存在");
+		    return 0;
+		}
+		return ratingPredict(this.userIndex.get(userId),this.itemIndex.get(itemId));
+	}
+	/**
+	 * 获取用户对每个物品的平均评分
+	 * @param useItemRating
+	 * @return
+	 */
+	public double[] itemRatingAvgCache(){
+		
+		double[] userAvgRating = new double[useItemRating.getRowDimension()];
+		double[][] rating = useItemRating.getArray();
+		double sum = 0;
+		int index = 0;
+		for (int i = 0; i < rating.length; i++) {
+			for (int j = 0; j < rating[i].length; j++) {
+//				if(rating[i][j]!=0){
+					sum +=rating[i][j];
+					index++;
+//				}
+			}
+			userAvgRating[i] = sum/index;
+			sum = 0;
+			index= 0;
+		}
+		return userAvgRating;
+	}
+	/**
+	 * 用户u的平均得分
+	 * @return
+	 */
+	public double userAvgRating(Integer userIndex){
+		return userAvgRating[userIndex];
+	}
+	
+	/**
+	 * 
+	 * @param userId
+	 * @param k 推荐个数
+	 * @return
+	 */
+	public List<Result> recommend(int userId,int k){
+		if(userIndex.get(userId)==null){
+			System.out.println("用户"+userId+"不存在,无法推荐");
+			return new ArrayList<Result>();
+		}
+		int uindex = userIndex.get(userId);
+		
+		List<Result> result = new ArrayList<Result>();
+		List<Integer> unRatingItems = getUserUnRating(uindex);
+		for (Iterator iterator = unRatingItems.iterator(); iterator.hasNext();) {
+			Integer unRatingItem = (Integer) iterator.next();
+			double rating = ratingPredict(uindex, unRatingItem);
+			Result r = new Result();
+			r.setUserId(userId);
+			r.setItemId(this.indexItem.get(unRatingItem));
+			r.setSimDegree(rating);
+			result.add(r);
+		}
+//		printResult(result);
+		Collections.sort(result);
+		if(result.size()>k){
+			return result.subList(0, k);
+		}else{
+			return result;
+		}
+	}
+	/////////////
 	@Override
 	public void initUserOrItemSimMatrix() {
 		double[][] userSimilar = new double[userIndex.size()][userIndex.size()];
@@ -98,7 +236,9 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 		return this.userSimilar;
 	}
 	public static void main(String[] args) {
-		UserBasedCF t = new UserBasedCF("D:\\tmp\\recommend\\test2\\train.txt"," ",SimiliarType.TANIMOTO);
+		UserBasedCF t = new UserBasedCF("D:\\tmp\\recommend\\test1\\train.txt"," ",SimiliarType.COSINE);
+		
+//		UserBasedCF t = new UserBasedCF("D:\\tmp\\recommend\\test2\\train.txt"," ",SimiliarType.TANIMOTO);
 		Matrix m = t.getUserSimilar();
 		m.print(2, 2);
 		List<Result> result = t.recommend(1, 10);

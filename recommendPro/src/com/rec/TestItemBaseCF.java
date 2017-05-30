@@ -20,6 +20,7 @@ public class TestItemBaseCF {
 	private Set<Integer> userRecItems = new HashSet<Integer>();//给用户推荐物品总数
 	private int totalItems;//系统总共物品数
 	private int totalCount;//总记录条数
+	private double ratingCount;
 	private Map<Integer,List<UserItemRating>> adduserPre(Map<Integer,List<UserItemRating>> userItemRating,int userId,int itemId,float rating){
 		List<UserItemRating> list = userItemRating.get(userId);
 		UserItemRating uir = new UserItemRating();
@@ -55,6 +56,7 @@ public class TestItemBaseCF {
 				int itemId = Integer.parseInt(datas[1]);
 				float rating = Float.parseFloat(datas[2]);
 				totalCount++;
+				ratingCount+=rating;
 				adduserPre(userItemRating,userId,itemId,rating);
 			}
 		} catch (NumberFormatException e) {
@@ -109,8 +111,8 @@ public class TestItemBaseCF {
 //		String trainData = "D:\\tmp\\recommend\\ml-100k\\u1.base";
 //		String testData = "D:\\tmp\\recommend\\ml-100k\\u1.test";
 		Map<Integer,List<UserItemRating>> userItemRating = loadTestData(testData);
-//		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol);
-		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
+		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol);
+//		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
 //		UserBasedCF sm = new UserBasedCF(trainData,splitSymbol,SimiliarType.TANIMOTO);
 		
 		int numerator_rt = 0;//精确度分子
@@ -126,7 +128,7 @@ public class TestItemBaseCF {
 		float recall = 0f;
 		for (Iterator iterator = keys.iterator(); iterator.hasNext();) {
 			Integer key = (Integer) iterator.next();
-			List<Result> result = sm.recommend1(key,recommendNum);
+			List<Result> result = sm.recommend(key,recommendNum);
 			numerator_rt+=intersection(result,userItemRating.get(key));
 			denominator_r+=result.size();
 			denominator_t+=userItemRating.get(key).size();
@@ -150,14 +152,17 @@ public class TestItemBaseCF {
 				",覆盖率："+((float)numerator_r.size())/totalItems);
 	}
 	public void recommendMAEAndRMSE(){
-		String testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
-		String  trainData= "D:\\tmp\\recommend\\aa_train\\part-00000";
-//		String trainData = "D:\\tmp\\recommend\\ml-100k\\u1.base";
-//		String testData = "D:\\tmp\\recommend\\ml-100k\\u1.test";
+//		String testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
+//		String  trainData= "D:\\tmp\\recommend\\aa_train\\part-00000";
+		String trainData = "D:\\tmp\\recommend\\ml-100k\\u1.base";
+		String testData = "D:\\tmp\\recommend\\ml-100k\\u1.test";
 		Map<Integer,List<UserItemRating>> userItemRating = loadTestData(testData);
 //		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol);
-		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.PEARSON);
+		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol,10,20,0.02f,0.01f);
+//		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
+//		UserBasedCF sm = new UserBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
 		float sum=0;
+		int index=0;
 		Collection<List<UserItemRating>> c = userItemRating.values();
 		for (Iterator iterator = c.iterator(); iterator.hasNext();) {
 			List<UserItemRating> list = (List<UserItemRating>) iterator.next();
@@ -167,14 +172,14 @@ public class TestItemBaseCF {
 				int userId = userItemRating2.getUserId();
 				int itemId = userItemRating2.getItemId();
 				double rating = userItemRating2.getRating();
-				double preRating = sm.preRatingWithId(userId, itemId);
+				double preRating = sm.ratingPredictWithId(userId, itemId);
 				sum+=Math.abs(rating-preRating);
-				
-				System.out.println("当前MAE="+sum/totalCount);
+				index++;
+				System.out.println("userId="+userId+"ItemId="+itemId+",预测评分="+preRating+",实际评分="+rating+"当前MAE="+sum/index);
 			}
 		}
 		
-		System.out.println("最终MAE="+sum/totalCount);
+		System.out.println(index+"最终MAE="+sum/index);
 	}
 	public static void test1(){
 		ItemBasedCF sm = new ItemBasedCF("D:\\tmp\\recommend\\ml-100k\\u1.base","\t");
