@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class TestItemBaseCF {
-	private String splitSymbol=",";
+	private String splitSymbol="\t";
 	private Set<Integer> userRecItems = new HashSet<Integer>();//给用户推荐物品总数
 	private int totalItems;//系统总共物品数
 	private int totalCount;//总记录条数
@@ -106,10 +106,10 @@ public class TestItemBaseCF {
 		}
 	}
 	public void recommendTest(int recommendNum){
-		String  testData = "D:\\tmp\\recommend\\netflix_test\\part-00000";
-		String  trainData = "D:\\tmp\\recommend\\netflix_train\\part-00000";
-//		String  testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
-//		String  trainData = "D:\\tmp\\recommend\\aa_train\\part-00000";
+//		String  testData = "D:\\tmp\\recommend\\netflix_test\\part-00000";
+//		String  trainData = "D:\\tmp\\recommend\\netflix_train\\part-00000";
+		String  testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
+		String  trainData = "D:\\tmp\\recommend\\aa_train\\part-00000";
 //		String trainData = "D:\\tmp\\recommend\\ml-100k\\u1.base";
 //		String testData = "D:\\tmp\\recommend\\ml-100k\\u1.test";
 		Map<Integer,List<UserItemRating>> userItemRating = loadTestData(testData);
