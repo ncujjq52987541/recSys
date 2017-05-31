@@ -265,6 +265,7 @@ public abstract class AbstratMemoryBaseCF {
 	 * @param splitSymbol
 	 */
 	protected void loadData(String path,String splitSymbol){
+		System.out.println("正在加载数据...");
     	FileInputStream fis =null;
 		try {
 			fis = new FileInputStream(path);
@@ -340,6 +341,7 @@ public abstract class AbstratMemoryBaseCF {
 		}
 		this.useItemRating = new Matrix(rating);
 //		this.itemSimiliar = new Matrix(itemSimilar);
+		System.out.println("数据加载完毕...");
 	}
 
 

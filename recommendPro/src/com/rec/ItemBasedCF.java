@@ -67,6 +67,7 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 	 */
 	@Override
 	public void simMatrixCompute(String similiar){
+		System.out.println("正计算相似度计算矩阵...");
 		itemAvgRating = this.itemRatingAvgCache();
 //		fillUserItemRating(useItemRating);
 //		useItemRating.print(2, 2);
@@ -77,6 +78,7 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 			userAvgRating = getUserAvgRating(useItemRating);
 		}
 		for (int i = 0; i < sim.length; i++) {
+			System.out.println("正在计算第"+i+"行");
 			for (int j = 0; j < sim[i].length; j++) {
 				if(i<j){
 					double[][] imatrix = useItemRating.getMatrix(0, useItemRating.getRowDimension()-1, i, i).transpose().getArray();
@@ -104,7 +106,7 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 			}
 		}
 		
-		
+		System.out.println("相似度矩阵计算完成...");
 	}
 	/**
 	 * 物品评分平均值
@@ -120,15 +122,16 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 		return avg;
 	}
 	
+	
+	public double itemAvgRating(Integer itemIndex){
+		return itemAvgRating[itemIndex];
+	}
 	/**
 	 * 最原始的推荐,不是严格按公式的
 	 * 物品k的平均得分
 	 * @return
 	 */
 	@Deprecated
-	public double itemAvgRating(Integer itemIndex){
-		return itemAvgRating[itemIndex];
-	}
 	public List<Result> recommendOrigin(int userId,int k){
 		if(userIndex.get(userId)==null){
 			System.out.println("用户"+userId+"不存在,无法推荐");
@@ -192,7 +195,7 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 		Set<Integer> ret = new HashSet<Integer>();
 		for (Iterator iterator = r.iterator(); iterator.hasNext();) {
 			Result result = (Result) iterator.next();
-			if(itemIdex!=result.getItemId()){//把自己除去
+			if(itemIdex!=result.getItemId()&&result.getSimDegree()>0){//把自己除去
 				ret.add(result.getItemId());
 				++sum;
 			}
@@ -219,25 +222,26 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 	 * @return
 	 */
 	public double ratingPredict(int userIndex,int itemIndex){
+//		double[] urating = useItemRating.getMatrix(userIndex, userIndex, 0, useItemRating.getColumnDimension()-1).getArray()[0];
+//		double numerator =0; 
+//		double denominator = 0;
+//		for (int i = 0; i < urating.length; i++) {
+//			if(urating[i]!=0&&itemSimiliar.get(itemIndex, i)>0){
+//				numerator+=itemSimiliar.get(itemIndex, i)*(useItemRating.get(userIndex, i)-itemAvgRating(i));
+//				denominator+=itemSimiliar.get(itemIndex, i);
+//			}
+//		}
+//		if(denominator==0){
+//			return itemAvgRating(itemIndex);
+//		}
+//		return itemAvgRating(itemIndex)+numerator/denominator;
+		
+		
 		Set<Integer> items = getItemNeighbors(itemIndex,this.neighborNumber);
 		double numerator =0; 
 		double denominator = 0;
 		for (Iterator iterator = items.iterator(); iterator.hasNext();) {
 			Integer k = (Integer) iterator.next();
-			
-//			double minus = useItemRating.get(userIndex, k);
-//			if(minus==0){
-//				minus=1;
-//			}else{
-//				minus=useItemRating.get(userIndex, k)-itemAvgRating(k);
-//			}
-//			numerator+=itemSimiliar.get(itemIndex, k)*(minus);
-			
-//			double minus = useItemRating.get(userIndex, k);
-//			if(minus!=0){
-//				numerator+=itemSimiliar.get(itemIndex, k)*(useItemRating.get(userIndex, k)-itemAvgRating(k));
-//				denominator+=itemSimiliar.get(itemIndex, k);
-//			}
 			numerator+=itemSimiliar.get(itemIndex, k)*(useItemRating.get(userIndex, k)-itemAvgRating(k));
 			denominator+=itemSimiliar.get(itemIndex, k);
 		}
@@ -287,7 +291,7 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 		return itemSimiliar;
 	}
 	public static void main(String[] args) {
-		ItemBasedCF t = new ItemBasedCF("D:\\tmp\\recommend\\test1\\train.txt"," ",SimiliarType.COSINE);
+		ItemBasedCF t = new ItemBasedCF("D:\\tmp\\recommend\\test\\train4.txt",",",SimiliarType.COSINE);
 //		Matrix m = t.getUseItemRating();
 		Matrix m = t.getItemSimiliar();
 		m.print(2, 2);
@@ -296,7 +300,7 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 //		System.out.println(t.pearson(new double[]{0,3.5,5.0,3.5,0,3.0,5.0}, new double[]{0,3.0,3.5,0,2.0,2.0,0}));
 //		t.recommend1(1, 1);
 //		List<Result> r = t.recommend(1, 10);
-		List<Result> r1 = t.recommend(1, 10);
+		List<Result> r1 = t.recommend(2, 10);
 //		for (Iterator iterator = r.iterator(); iterator.hasNext();) {
 //			Result result = (Result) iterator.next();
 //			System.out.println(result.getItemId()+","+result.getSimDegree());

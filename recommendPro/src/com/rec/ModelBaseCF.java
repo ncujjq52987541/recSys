@@ -56,7 +56,7 @@ public class ModelBaseCF extends AbstratMemoryBaseCF{
 		
 		int num = 0;
 		while(num++<iteratorNums){
-			System.out.println("共迭代"+iteratorNums+"次正在进行第："+num+" 次迭代");
+			System.out.println("共迭代"+iteratorNums+"，次正在进行第："+num+" 次迭代");
 			for (int u = 0; u < rating.getRowDimension(); u++) {
 				for (int i = 0; i < rating.getColumnDimension(); i++) {
 					for (int k = 0; k < latent; k++) {

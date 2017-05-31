@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class TestItemBaseCF {
-	private String splitSymbol="\t";
+	private String splitSymbol=",";
 	private Set<Integer> userRecItems = new HashSet<Integer>();//给用户推荐物品总数
 	private int totalItems;//系统总共物品数
 	private int totalCount;//总记录条数
@@ -106,13 +106,16 @@ public class TestItemBaseCF {
 		}
 	}
 	public void recommendTest(int recommendNum){
-		String  testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
-		String  trainData = "D:\\tmp\\recommend\\aa_train\\part-00000";
+		String  testData = "D:\\tmp\\recommend\\netflix_test\\part-00000";
+		String  trainData = "D:\\tmp\\recommend\\netflix_train\\part-00000";
+//		String  testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
+//		String  trainData = "D:\\tmp\\recommend\\aa_train\\part-00000";
 //		String trainData = "D:\\tmp\\recommend\\ml-100k\\u1.base";
 //		String testData = "D:\\tmp\\recommend\\ml-100k\\u1.test";
 		Map<Integer,List<UserItemRating>> userItemRating = loadTestData(testData);
-		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol);
-//		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
+//		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol);
+//		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol,2,100,0.02f,0.01f);
+		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
 //		UserBasedCF sm = new UserBasedCF(trainData,splitSymbol,SimiliarType.TANIMOTO);
 		
 		int numerator_rt = 0;//精确度分子
@@ -152,15 +155,16 @@ public class TestItemBaseCF {
 				",覆盖率："+((float)numerator_r.size())/totalItems);
 	}
 	public void recommendMAEAndRMSE(){
-//		String testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
-//		String  trainData= "D:\\tmp\\recommend\\aa_train\\part-00000";
-		String trainData = "D:\\tmp\\recommend\\ml-100k\\u1.base";
-		String testData = "D:\\tmp\\recommend\\ml-100k\\u1.test";
+		String testData = "D:\\tmp\\recommend\\aa_test\\part-00000";
+		String  trainData= "D:\\tmp\\recommend\\aa_train\\part-00000";
+//		String trainData = "D:\\tmp\\recommend\\ml-100k\\u1.base";
+//		String testData = "D:\\tmp\\recommend\\ml-100k\\u1.test";
 		Map<Integer,List<UserItemRating>> userItemRating = loadTestData(testData);
 //		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol);
-		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol,10,20,0.02f,0.01f);
-//		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
+//		ModelBaseCF sm = new ModelBaseCF(trainData,splitSymbol,2,100,0.02f,0.01f);
+		ItemBasedCF sm = new ItemBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
 //		UserBasedCF sm = new UserBasedCF(trainData,splitSymbol,SimiliarType.COSINE);
+//		sm.getItemSimiliar().print(2, 2);
 		float sum=0;
 		int index=0;
 		Collection<List<UserItemRating>> c = userItemRating.values();
