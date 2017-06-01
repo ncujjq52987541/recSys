@@ -113,9 +113,9 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 	 * @return
 	 */
 	public double[] itemRatingAvgCache(){
-		double[] avg = new double[itemSimiliar.getRowDimension()];
+		double[] avg = new double[useItemRating.getColumnDimension()];
 		for (int i = 0; i < avg.length; i++) {
-			avg[i]=MathUtil.getAverage(
+			avg[i]=MathUtil.getAverageIngoreZero(
 					useItemRating.getMatrix(0, useItemRating.getRowDimension()-1, i,i).transpose().getArray()[0]
 					);
 		}
@@ -242,8 +242,10 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 		double denominator = 0;
 		for (Iterator iterator = items.iterator(); iterator.hasNext();) {
 			Integer k = (Integer) iterator.next();
+			if(useItemRating.get(userIndex, k)>0){
 			numerator+=itemSimiliar.get(itemIndex, k)*(useItemRating.get(userIndex, k)-itemAvgRating(k));
 			denominator+=itemSimiliar.get(itemIndex, k);
+			}
 		}
 		if(denominator==0){
 			return itemAvgRating(itemIndex);
@@ -291,7 +293,8 @@ public class ItemBasedCF extends AbstratMemoryBaseCF{
 		return itemSimiliar;
 	}
 	public static void main(String[] args) {
-		ItemBasedCF t = new ItemBasedCF("D:\\tmp\\recommend\\test\\train4.txt",",",SimiliarType.COSINE);
+		ItemBasedCF t = new ItemBasedCF("D:\\tmp\\recommend\\netflixprocess\\netflix.txt",",",SimiliarType.COSINE);
+//		ItemBasedCF t = new ItemBasedCF("D:\\tmp\\recommend\\test\\train4.txt",",",SimiliarType.COSINE);
 //		Matrix m = t.getUseItemRating();
 		Matrix m = t.getItemSimiliar();
 		m.print(2, 2);

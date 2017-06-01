@@ -34,7 +34,7 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 
 	@Override
 	public void simMatrixCompute(String similiar){
-		userAvgRating = this.itemRatingAvgCache();
+		userAvgRating = this.userRatingAvgCache();
 		double[][] sim = userSimilar.getArray();
 //		double[] userAvgRating = null;
 //		if(SimiliarType.ADJUSTEDCOSINE.equals(similiar)){//只有ADJUSTEDCOSINE才需计算这个值
@@ -141,9 +141,10 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 		double denominator = 0;
 		for (Iterator iterator = users.iterator(); iterator.hasNext();) {
 			Integer ui = (Integer) iterator.next();
-			
+			if(useItemRating.get(ui, itemIndex)>0){
 			numerator+=userSimilar.get(userIndex, ui)*(useItemRating.get(ui, itemIndex)-userAvgRating(ui));
 			denominator+=userSimilar.get(userIndex, ui);
+			}
 		}
 		if(denominator==0){
 			return userAvgRating(userIndex);
@@ -166,24 +167,32 @@ public class UserBasedCF extends AbstratMemoryBaseCF{
 	 * @param useItemRating
 	 * @return
 	 */
-	public double[] itemRatingAvgCache(){
-		
-		double[] userAvgRating = new double[useItemRating.getRowDimension()];
-		double[][] rating = useItemRating.getArray();
-		double sum = 0;
-		int index = 0;
-		for (int i = 0; i < rating.length; i++) {
-			for (int j = 0; j < rating[i].length; j++) {
-//				if(rating[i][j]!=0){
-					sum +=rating[i][j];
-					index++;
-//				}
-			}
-			userAvgRating[i] = sum/index;
-			sum = 0;
-			index= 0;
+	public double[] userRatingAvgCache(){
+		double[] avg = new double[useItemRating.getRowDimension()];
+		for (int i = 0; i < avg.length; i++) {
+			avg[i]=MathUtil.getAverageIngoreZero(
+					useItemRating.getMatrix(i,i, 0,useItemRating.getColumnDimension()-1).getArray()[0]
+					);
 		}
-		return userAvgRating;
+		return avg;
+		
+		
+//		double[] userAvgRating = new double[useItemRating.getRowDimension()];
+//		double[][] rating = useItemRating.getArray();
+//		double sum = 0;
+//		int index = 0;
+//		for (int i = 0; i < rating.length; i++) {
+//			for (int j = 0; j < rating[i].length; j++) {
+////				if(rating[i][j]!=0){
+//					sum +=rating[i][j];
+//					index++;
+////				}
+//			}
+//			userAvgRating[i] = sum/index;
+//			sum = 0;
+//			index= 0;
+//		}
+//		return userAvgRating;
 	}
 	/**
 	 * 用户u的平均得分
